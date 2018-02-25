@@ -150,3 +150,51 @@ def fit2national(grid, res=1000, natl=None):
 
     return(newext)
 
+def readGrid(grid):
+    from osgeo import gdal
+
+    g = gdal.Open(grid)
+    gt = g.GetGeoTransform()
+    rsize = (g.RasterXSize, g.RasterYSize)
+    a = g.GetRasterBand(1).ReadAsArray()
+
+    return(gt, rsize, a)
+
+def rasterizeGrid(shp, gridOut, lyrName='modelgrid', cellsize=1000.,
+                  nrow=4000, ncol=4980, attribute='cellnum', 
+                  upperleft=None, wkt='', grid=None):
+    """
+    rasterize modelgrid - use cellnum as value
+    """
+
+    from osgeo import gdal, osr, ogr
+
+    # steal geotransform from existing grid
+    if grid != None:
+        gt, rsize, a = readGrid(grid)
+    else:
+        # assumes national grid corner
+        # gt = (-2553045.0, cellsize, 0.0, 3907285.0, 0.0, -cellsize)
+        gt = (upperleft[0], cellsize, 0.0, upperleft[1], 0.0, -cellsize)
+        rsize = (ncol, nrow)
+
+    ds = ogr.Open(shp)
+    if lyrName != None:
+        lyr = ds.GetLayerByName(lyrName)
+    else:
+        lyr = ds.GetLayer(0)
+
+    proj = lyr.GetSpatialRef() #.ExportToProj4()
+    # print(proj.ExportToWkt())
+    # proj = osr.SpatialReference()
+    # proj.ImportFromEPSG(5070)
+    # proj.ImportFromProj4(5070)
+    # print(proj.ExportToWkt())
+
+    driver = gdal.GetDriverByName('GTiff')
+
+    rvds = driver.Create(gridOut, rsize[0], rsize[1], 1, gdal.GDT_Int32)
+    rvds.SetGeoTransform(gt)
+    rvds.SetProjection(proj.ExportToWkt())
+    gdal.RasterizeLayer(rvds, [1], lyr, None, None, [1], ['ATTRIBUTE={}'.format(attribute)])
+
