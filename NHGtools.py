@@ -10,7 +10,7 @@ def NHGextent():
                 'ul': [-2553045.0, 3907285.0]}
     return(natlExt)
 
-def gcGrid(ll, lr, ur, size, grd, proj=5070, fctype='gpkg'):
+def gcGrid(ll, lr, ur, size, icol, irow, grd, proj=5070, fctype='gpkg'):
     """
     creates a polygon grid from given spatial location
     and dimensions.
@@ -21,7 +21,9 @@ def gcGrid(ll, lr, ur, size, grd, proj=5070, fctype='gpkg'):
     nrow, ncol = fn.calcRowCol(ll, lr, ur, size)    
     delr = [size for x in range(nrow)]
     delc = [size for x in range(ncol)]
-    fn.mkGrid(grd,ll,delc,delr,0.0,proj,fctype=fctype, mkpoints=False)
+    print(len(delc), len(delr))
+    print(ncol, nrow)
+    fn.mkGrid(grd,ll,delc,delr,icol,irow,0.0,proj,fctype=fctype, mkpoints=False)
 
 def convertCoords(xy, src='', targ=''):
     """
@@ -125,14 +127,40 @@ def maxExtent(box1, box2):
                'ul':[ur[0], ll[1]]} 
     return(newext)
 
-def fit2national(grid, res=1000, natl=None):
+def fit2national(grid, fac=1, natl=None):
+    #why would natl ever not be None?
     if natl == None:
         natl = NHGextent()
+    
+    print('national grid')
+    print(natl)
+    natres = 1000
+    # print(type(fac))
+
+    if isinstance(fac, int):
+        if fac == 1:
+            res = natres
+        else:
+            print('this is where grid would get bigger')
+    elif isinstance(fac, str):
+        if fac == '1/2':
+            res = natres/2
+        elif fac == '1/4':
+            res = natres/4
+        elif fac == '1/8':
+            res = natres/8
+        else:
+            res = 0
+            print('this aint gonna work')
+    else:
+        res = 0
+        print('this also aint gonna work')
+    print('resolution',res)
+
     newext = {}
 
     syoff = (grid['ll'][1] - natl['ll'][1]) / res
     y = natl['ll'][1] + int(syoff) * res
-
     sxoff = (grid['ll'][0] - natl['ll'][0]) / res
     x = natl['ll'][0] + (int(sxoff)) * res
 
@@ -147,8 +175,14 @@ def fit2national(grid, res=1000, natl=None):
     newext['ur'] = [x, y]
     newext['lr'] = [x, newext['ll'][1]]
     newext['ul'] = [newext['ll'][0], y]
+    print('new local extent')
+    print(newext)
 
-    return(newext)
+    icol = (abs(natl['ul'][0] - newext['ul'][0]) / res ) + 1
+    irow = (abs(natl['ul'][1] - newext['ul'][1]) / res) + 1
+    print(icol,irow)
+
+    return(res, newext, icol, irow)
 
 def readGrid(grid):
     from osgeo import gdal

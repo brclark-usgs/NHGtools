@@ -4,7 +4,7 @@ from osgeo import ogr,osr,gdal
 from math import radians, atan, degrees
 
 
-def mkGrid(fcBase,origin,delc,delr,theta,proj,
+def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
            fctype='shp',lyr='modelgrid',targsrs=None,
            mkpoints=False):
     """
@@ -102,10 +102,10 @@ def mkGrid(fcBase,origin,delc,delr,theta,proj,
     ringXrightbot,ringYrightbot = rotatePt(delcTot,0,theta)
     ringXrighttop,ringYrighttop = rotatePt(delcTot,delrTot,theta)
     # create grid cells
-    for icol,c in enumerate(delc):
-        sys.stdout.write('\r{} of {} cols'.format(icol,len(delc)))
+    for i,c in enumerate(delc):
+        sys.stdout.write('\r{} of {} cols'.format(i+1,len(delc)))
         sys.stdout.flush()
-        for irow,r in enumerate(delr):
+        for j,r in enumerate(delr):
 
             ringXleftbot,ringYleftbot = rotatePt(delc1,delrTot,theta)
             ringXrightbot,ringYrightbot = rotatePt(delcTot,delrTot,theta)
@@ -128,8 +128,10 @@ def mkGrid(fcBase,origin,delc,delr,theta,proj,
             # add new geom to layer
             outFeature = ogr.Feature(featureDefn)
             outFeature.SetGeometry(poly)
-            outFeature.SetField('irow',len(delr)-irow)
-            outFeature.SetField('icol',icol+1)
+            # outFeature.SetField('irow',len(delr)-irow)
+            outFeature.SetField('irow', irow + len(delr) - (j+1))
+            # outFeature.SetField('icol',icol+1)
+            outFeature.SetField('icol', icol + i)
             outFeature.SetField('cellnum',(len(delr)-irow-1)*len(delc)+icol+1)
             outFeature.SetField('rc',((len(delr)-irow)*1000+icol+1))
             outLayer.CreateFeature(outFeature)
