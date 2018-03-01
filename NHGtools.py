@@ -8,9 +8,13 @@ def NHGextent():
                 'lr': [2426955.0, -92715.0],
                 'ur': [2426955.0, 3907285.0],
                 'ul': [-2553045.0, 3907285.0]}
-    return(natlExt)
 
-def gcGrid(ll, lr, ur, size, icol, irow, grd, proj=5070, fctype='gpkg'):
+    ngrows = 4000
+    ngcols = 4980
+
+    return(natlExt, ngrows, ngcols)
+
+def gcGrid(ext, cellsize, icol, irow, grd, proj=5070, fctype='gpkg'):
     """
     creates a polygon grid from given spatial location
     and dimensions.
@@ -18,12 +22,32 @@ def gcGrid(ll, lr, ur, size, icol, irow, grd, proj=5070, fctype='gpkg'):
     """
     import fishnet as fn
 
-    nrow, ncol = fn.calcRowCol(ll, lr, ur, size)    
-    delr = [size for x in range(nrow)]
-    delc = [size for x in range(ncol)]
+    # number of rows and cols of new grid
+    nrow, ncol = fn.calcRowCol(ext['ll'], ext['lr'], ext['ur'], cellsize)    
+    delr = [cellsize for x in range(nrow)]
+    delc = [cellsize for x in range(ncol)]
+    theta = 0.0
     print(len(delc), len(delr))
+    print('new cols and rows', ncol, nrow)
+    # irow and icol are ....
+    fn.mkGrid(grd,ext['ll'],delc,delr,icol,irow,theta,proj,fctype=fctype)
+
+def mkNationalGrid(fc, fctype='gpkg'):
+    import fishnet as fn
+
+    cellsize = 1000
+    ne, nrow, ncol = NHGextent()
+    # nrow, ncol = fn.calcRowCol(ne['ll'], ne['lr'], ne['ur'], cellsize)
+    delr = [cellsize for x in range(nrow)]
+    delc = [cellsize for x in range(ncol)]
+    icol = 1
+    irow = 1
+    theta = 0.
+    proj = 5070
+
     print(ncol, nrow)
-    fn.mkGrid(grd,ll,delc,delr,icol,irow,0.0,proj,fctype=fctype, mkpoints=False)
+    fn.mkGrid(fc,ne['ll'],delc,delr,icol,irow,theta,proj,fctype=fctype)
+
 
 def convertCoords(xy, src='', targ=''):
     """
@@ -130,7 +154,7 @@ def maxExtent(box1, box2):
 def fit2national(grid, fac=1, natl=None):
     #why would natl ever not be None?
     if natl == None:
-        natl = NHGextent()
+        natl, ngrows, ngcols = NHGextent()
     
     print('national grid')
     print(natl)
@@ -138,10 +162,12 @@ def fit2national(grid, fac=1, natl=None):
     # print(type(fac))
 
     if isinstance(fac, int):
-        if fac == 1:
-            res = natres
-        else:
-            print('this is where grid would get bigger')
+        # if fac == 1:
+        res = natres * fac
+        # if fac != 1:
+            # raise Exception('expecting factor of 1')
+        # else:
+            # print('this is where grid would get bigger')
     elif isinstance(fac, str):
         if fac == '1/2':
             res = natres/2
@@ -180,7 +206,8 @@ def fit2national(grid, fac=1, natl=None):
 
     icol = (abs(natl['ul'][0] - newext['ul'][0]) / res ) + 1
     irow = (abs(natl['ul'][1] - newext['ul'][1]) / res) + 1
-    print(icol,irow)
+    print('starting row and col of national grid')
+    print(irow, icol)
 
     return(res, newext, icol, irow)
 
