@@ -246,16 +246,14 @@ def rasterizeGrid(shp, gridOut, lyrName='modelgrid', cellsize=1000.,
         lyr = ds.GetLayer(0)
 
     proj = lyr.GetSpatialRef() #.ExportToProj4()
-    # print(proj.ExportToWkt())
-    # proj = osr.SpatialReference()
-    # proj.ImportFromEPSG(5070)
-    # proj.ImportFromProj4(5070)
-    # print(proj.ExportToWkt())
+    proj = proj.ExportToProj4()
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(proj)
 
     driver = gdal.GetDriverByName('GTiff')
 
     rvds = driver.Create(gridOut, rsize[0], rsize[1], 1, gdal.GDT_Int32)
     rvds.SetGeoTransform(gt)
-    rvds.SetProjection(proj.ExportToWkt())
+    rvds.SetProjection(srs.ExportToWkt())
     gdal.RasterizeLayer(rvds, [1], lyr, None, None, [1], ['ATTRIBUTE={}'.format(attribute)])
 
