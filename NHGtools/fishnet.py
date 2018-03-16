@@ -3,13 +3,13 @@ import time
 from osgeo import ogr,osr,gdal
 from math import radians, atan, degrees
 
-def getNational():
-    import NHGtools as nt
-    return(nt.NHGextent())
+# def getNational():
+#     import NHGtools as nt
+#     return(nt.NHGextent())
 
 
 def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
-           fctype='shp',lyr='modelgrid',targsrs=None):
+           fctype='shp',lyr='modelgrid',targsrs=None, ngcolNum=1):
 
     """
     fcBase: string, shapefile path and name or sqlite database name, 
@@ -34,7 +34,6 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
     x = origin[0]
     y = origin[1]
 
-    natlExt, ngrows, ngcols = getNational()
 
     def rotatePt(dX,dY,theta):
         pol = cmath.polar(complex(dX,dY))
@@ -132,7 +131,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             outFeature.SetField('natlRow', ngrow)
             outFeature.SetField('natlCol', ngcol)
             # outFeature.SetField('natlCellNum',(len(delr)-irow-1)*len(delc)+icol+1)
-            outFeature.SetField('natlCellNum',(ngrow - 1) * ngcols + ngcol)
+            outFeature.SetField('natlCellNum',(ngrow - 1) * ngcolNum + ngcol)
 
             outFeature.SetField('irow',len(delr) - j)
             outFeature.SetField('icol', i + 1)

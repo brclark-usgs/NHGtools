@@ -55,7 +55,8 @@ class nhg(object):
         from . import fishnet as fn
 
         # number of rows and cols of new grid
-        # nrow, ncol = fn.calcRowCol(ext['ll'], ext['lr'], ext['ur'], self.__cellsize)    
+        self.__irow, self.__icol = fn.calcRowCol(self.ext['ll'], self.ext['lr'], 
+                                   self.ext['ur'], self.__cellsize)    
         delr = [self.__cellsize for x in range(self.__irow)]
         delc = [self.__cellsize for x in range(self.__icol)]
         theta = 0.0
@@ -63,7 +64,8 @@ class nhg(object):
         print('new cols and rows', self.__icol, self.__irow)
         # irow and icol are ....
         fn.mkGrid(self.fc, self.ext['ll'], delc, delr, self.__icol,
-                  self.__irow, theta, self.__proj, self.fctype)
+                  self.__irow, theta, self.__proj, self.fctype,
+                  ngcolNum=self.__ngcolNum)
 
     def mkNationalGrid(self): #fc, fctype='gpkg'):
         import fishnet as fn
@@ -129,12 +131,13 @@ class nhg(object):
         print(newext)
 
         self.__newext = newext
-        self.__icol = int(abs(self.__natlExt['ul'][0] - newext['ul'][0]) / res ) + 1
-        self.__irow = int(abs(self.__natlExt['ul'][1] - newext['ul'][1]) / res) + 1
+        self.__ngcolNum = int(abs(self.__natlExt['ul'][0] - newext['ul'][0]) / res ) + 1
+        self.__ngrowNum = int(abs(self.__natlExt['ul'][1] - newext['ul'][1]) / res) + 1
         self.__cellsize = res
 
         print('starting row and col of national grid')
-        print(self.__irow, self.__icol)
+        print(self.__ngrowNum, self.__ngcolNum)
+        print(self.__irow, self.__icol, self.__cellsize)
 
 
     def readGrid(self, grid):
