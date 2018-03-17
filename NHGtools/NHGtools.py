@@ -2,6 +2,7 @@
 import os, sys
 import numpy as np
 from . import fishnet as fn
+from osgeo import gdal, osr, ogr
 
 class nhg(object):
     """
@@ -19,21 +20,26 @@ class nhg(object):
 
     """
 
-    def __init__(self, ext, fac=1, proj=5070, fctype='gpkg',
-                 fc='mygrid'):
+    def __init__(self, ext=None, fac=1, proj=5070, fctype='gpkg',
+                 fc='natlGrid1km'):
 
-        self.ext = ext
+        self.NHGextent()
+
         self.fctype = fctype
         self.fac = fac
         self.fc = fc
 
         self.__proj = proj
 
-        self.NHGextent()
         # assign defaults
         self.__cellsize = self.__natCellsize
         self.__icol = self.__ngcols
         self.__irow = self.__ngrows
+        if ext != None:
+            self.ext = ext
+        else:
+            self.ext = self.__natlExt
+            self.__newext = self.__natlExt
 
 
     def NHGextent(self):
@@ -143,7 +149,6 @@ class nhg(object):
 
 
     def readGrid(self, grid):
-        from osgeo import gdal
 
         g = gdal.Open(grid)
         gt = g.GetGeoTransform()
@@ -152,17 +157,13 @@ class nhg(object):
 
         return(gt, rsize, a)
 
-    def rasterizeGrid(self, fc=None, rasterName='mygrid.tif',
-                      lyrName='modelgrid', 
-                      attribute='cellnum', 
-                      wkt='', raster=None):
+    def createRaster(self, fc=None, rasterName='natlGrid1km.tif',
+                     raster=None):
         """
         rasterize modelgrid - use cellnum as value
         """
         if fc == None:
             fc = '{}.{}'.format(self.fc, self.fctype)
-
-        from osgeo import gdal, osr, ogr
 
         # steal geotransform from existing grid
         if raster != None:
@@ -177,56 +178,55 @@ class nhg(object):
 
             rsize = (self.__icol, self.__irow)
 
-        ds = ogr.Open(fc)
+
+        # proj = lyr.GetSpatialRef() #.ExportToProj4()
+        # proj = proj.ExportToProj4()
+        srs = osr.SpatialReference()
+        # srs.ImportFromProj4(proj)
+        srs.ImportFromEPSG(self.__proj)
+
+        drv = gdal.GetDriverByName('GTiff')
+
+        self.__rvds = drv.Create(rasterName, rsize[0],
+                                 rsize[1], 1, gdal.GDT_Int32)
+        self.__rvds.SetGeoTransform(gt)
+        self.__rvds.SetProjection(srs.ExportToWkt())
+
+
+    def rasterizer(self, lyrName='modelgrid', attribute='cellnum',
+                   rasterName='natlGrid1km.tif'):
+
+        self.fit2national()
+        self.createRaster(rasterName=rasterName)
+
+        ds = ogr.Open('{}.{}'.format(self.fc, self.fctype))
         if lyrName != None:
             lyr = ds.GetLayerByName(lyrName)
         else:
             lyr = ds.GetLayer(0)
 
-        proj = lyr.GetSpatialRef() #.ExportToProj4()
-        proj = proj.ExportToProj4()
-        srs = osr.SpatialReference()
-        srs.ImportFromProj4(proj)
-
-        driver = gdal.GetDriverByName('GTiff')
-
-        rvds = driver.Create(rasterName, rsize[0], rsize[1], 1, gdal.GDT_Int32)
-        rvds.SetGeoTransform(gt)
-        rvds.SetProjection(srs.ExportToWkt())
-        gdal.RasterizeLayer(rvds, [1], lyr, None, None, [1], ['ATTRIBUTE={}'.format(attribute)])
-
+        gdal.RasterizeLayer(self.__rvds, [1], lyr, None, None, 
+                      [1], ['ATTRIBUTE={}'.format(attribute)])
         print('Rasterizification complete')
+
+
+    def writeBand(self):
+        self.__rvds.GetRasterBand(1).WriteArray(self.__grid)
+        # self.__rvds.GetRasterBand(1).SetNoDataValue(np.nan)
+        print('Raster complete')
+
 
 
     def makeCellNumRaster(self):
 
-        # delrTot = 0. 
-        # delcTot = self.__cellsize
-        # delc1 = 0.
-
-        # create grid cells
-        # for i,c in enumerate(delc):
         cells = []
 
-        # for i in range(self.__icol):
         for j in range(self.__irow):
 
-            # sys.stdout.write('\r{} of {} cols'.format(i+1, self.__icol))
-            # sys.stdout.flush()
-
-            # for j,r in enumerate(delr):
-            # for j in range(self.__irow):
             for i in range(self.__icol):
-
-                # delrTot = delrTot + r
-
-                # ngrow = irow + self.__irow - (j + 1)
-                # ngcol = icol + i
-                # natlCellNum = (ngrow - 1) * ngcolNum + ngcol
 
                 irow = self.__irow - j
                 icol = i + 1
-                # cellNum = (len(delr) - j - 1) * len(delc) + i + 1
                 cellNum = (self.__irow - j - 1) * self.__icol + i + 1
                 cells.append(cellNum)
 
@@ -234,3 +234,14 @@ class nhg(object):
         cells = cells.reshape((self.__irow, self.__icol))
         self.__grid = cells
 
+
+    def NationalRaster(self):
+        self.makeCellNumRaster()
+        self.createRaster()
+        self.writeBand()
+
+    def localRaster(self):
+        self.fit2national()
+        self.createRaster()
+        self.makeCellNumRaster()
+        self.writeBand()
