@@ -9,7 +9,7 @@ from math import radians, atan, degrees
 
 
 def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
-           fctype='shp',lyr='modelgrid',targsrs=None, ngcolNum=1):
+           fctype='gpkg',lyr='modelgrid',targsrs=None, ngcolNum=1):
 
     """
     fcBase: string, shapefile path and name or sqlite database name, 

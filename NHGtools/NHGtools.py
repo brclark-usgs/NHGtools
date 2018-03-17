@@ -1,6 +1,7 @@
 
 import os, sys
 import numpy as np
+from . import fishnet as fn
 
 class nhg(object):
     """
@@ -29,6 +30,7 @@ class nhg(object):
         self.__proj = proj
 
         self.NHGextent()
+        # assign defaults
         self.__cellsize = self.__natCellsize
         self.__icol = self.__ngcols
         self.__irow = self.__ngrows
@@ -52,23 +54,18 @@ class nhg(object):
         and dimensions.
         can write shapefile, sqlite, or geopackage feature class
         """
-        from . import fishnet as fn
-
-        # number of rows and cols of new grid
-        self.__irow, self.__icol = fn.calcRowCol(self.ext['ll'], self.ext['lr'], 
-                                   self.ext['ur'], self.__cellsize)    
+   
         delr = [self.__cellsize for x in range(self.__irow)]
         delc = [self.__cellsize for x in range(self.__icol)]
         theta = 0.0
-        print(len(delc), len(delr))
+
         print('new cols and rows', self.__icol, self.__irow)
         # irow and icol are ....
-        fn.mkGrid(self.fc, self.ext['ll'], delc, delr, self.__icol,
+        fn.mkGrid(self.fc, self.__newext['ll'], delc, delr, self.__icol,
                   self.__irow, theta, self.__proj, self.fctype,
                   ngcolNum=self.__ngcolNum)
 
     def mkNationalGrid(self): #fc, fctype='gpkg'):
-        import fishnet as fn
 
         # nrow, ncol = fn.calcRowCol(ne['ll'], ne['lr'], ne['ur'], cellsize)
         delr = [self.__natCellsize for x in range(self.__ngrows)]
@@ -107,7 +104,6 @@ class nhg(object):
         else:
             res = 0
             print('this also aint gonna work')
-        print('resolution',res)
 
         newext = {}
 
@@ -137,6 +133,12 @@ class nhg(object):
 
         print('starting row and col of national grid')
         print(self.__ngrowNum, self.__ngcolNum)
+
+
+        # number of rows and cols of new grid
+        self.__irow, self.__icol = fn.calcRowCol(self.__newext['ll'], self.__newext['lr'], 
+                                   self.__newext['ur'], self.__cellsize) 
+        print('number of rows, columns, and cellsize of new grid')
         print(self.__irow, self.__icol, self.__cellsize)
 
 
@@ -150,25 +152,32 @@ class nhg(object):
 
         return(gt, rsize, a)
 
-    def rasterizeGrid(self, shp, gridOut, lyrName='modelgrid', 
-                      nrow=4000, ncol=4980, attribute='cellnum', 
-                      upperleft=None, wkt='', grid=None):
+    def rasterizeGrid(self, fc=None, rasterName='mygrid.tif',
+                      lyrName='modelgrid', 
+                      attribute='cellnum', 
+                      wkt='', raster=None):
         """
         rasterize modelgrid - use cellnum as value
         """
+        if fc == None:
+            fc = '{}.{}'.format(self.fc, self.fctype)
 
         from osgeo import gdal, osr, ogr
 
         # steal geotransform from existing grid
-        if grid != None:
-            gt, rsize, a = readGrid(grid)
+        if raster != None:
+            gt, rsize, a = self.readGrid(raster)
         else:
-            # assumes national grid corner
-            # gt = (-2553045.0, cellsize, 0.0, 3907285.0, 0.0, -cellsize)
-            gt = (upperleft[0], self.__cellsize, 0.0, upperleft[1], 0.0, -self.__cellsize)
-            rsize = (ncol, nrow)
+            gt = (self.__newext['ul'][0],
+                  self.__cellsize,
+                  0.0,
+                  self.__newext['ul'][1],
+                  0.0,
+                  -self.__cellsize)
 
-        ds = ogr.Open(shp)
+            rsize = (self.__icol, self.__irow)
+
+        ds = ogr.Open(fc)
         if lyrName != None:
             lyr = ds.GetLayerByName(lyrName)
         else:
@@ -181,8 +190,47 @@ class nhg(object):
 
         driver = gdal.GetDriverByName('GTiff')
 
-        rvds = driver.Create(gridOut, rsize[0], rsize[1], 1, gdal.GDT_Int32)
+        rvds = driver.Create(rasterName, rsize[0], rsize[1], 1, gdal.GDT_Int32)
         rvds.SetGeoTransform(gt)
         rvds.SetProjection(srs.ExportToWkt())
         gdal.RasterizeLayer(rvds, [1], lyr, None, None, [1], ['ATTRIBUTE={}'.format(attribute)])
+
+        print('Rasterizification complete')
+
+
+    def makeCellNumRaster(self):
+
+        # delrTot = 0. 
+        # delcTot = self.__cellsize
+        # delc1 = 0.
+
+        # create grid cells
+        # for i,c in enumerate(delc):
+        cells = []
+
+        # for i in range(self.__icol):
+        for j in range(self.__irow):
+
+            # sys.stdout.write('\r{} of {} cols'.format(i+1, self.__icol))
+            # sys.stdout.flush()
+
+            # for j,r in enumerate(delr):
+            # for j in range(self.__irow):
+            for i in range(self.__icol):
+
+                # delrTot = delrTot + r
+
+                # ngrow = irow + self.__irow - (j + 1)
+                # ngcol = icol + i
+                # natlCellNum = (ngrow - 1) * ngcolNum + ngcol
+
+                irow = self.__irow - j
+                icol = i + 1
+                # cellNum = (len(delr) - j - 1) * len(delc) + i + 1
+                cellNum = (self.__irow - j - 1) * self.__icol + i + 1
+                cells.append(cellNum)
+
+        cells = np.array(cells)
+        cells = cells.reshape((self.__irow, self.__icol))
+        self.__grid = cells
 
