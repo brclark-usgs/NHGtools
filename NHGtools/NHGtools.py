@@ -53,13 +53,15 @@ class nhg(object):
         self.__ngcols = 4980
         self.__natCellsize = 1000
 
-    def createGrid(self):
+    def customPolyGrid(self):
         #ext, cellsize, icol, irow, grd, proj=5070, fctype='gpkg'):
         """
         creates a polygon grid from given spatial location
         and dimensions.
         can write shapefile, sqlite, or geopackage feature class
         """
+
+        self.fit2national()
    
         delr = [self.__cellsize for x in range(self.__irow)]
         delc = [self.__cellsize for x in range(self.__icol)]
@@ -160,7 +162,7 @@ class nhg(object):
     def createRaster(self, fc=None, rasterName='natlGrid1km.tif',
                      raster=None):
         """
-        rasterize modelgrid - use cellnum as value
+        new, empty raster 
         """
         if fc == None:
             fc = '{}.{}'.format(self.fc, self.fctype)
@@ -213,6 +215,7 @@ class nhg(object):
     def writeBand(self):
         self.__rvds.GetRasterBand(1).WriteArray(self.__grid)
         # self.__rvds.GetRasterBand(1).SetNoDataValue(np.nan)
+        self.__rvds = None
         print('Raster complete')
 
 
