@@ -67,8 +67,8 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
     if fctype == 'shp': 
         outDriver = ogr.GetDriverByName('ESRI Shapefile')
         outDriver.DeleteDataSource(fcBase + '.shp')
-        outPolyDataSource = outDriver.CreateDataSource(fcBase + '.shp')
-        outLayer = outPolyDataSource.CreateLayer(fcBase,geom_type=ogr.wkbPolygon25D, srs=projinfo)
+        outDataSource = outDriver.CreateDataSource(fcBase + '.shp')
+        outLayer = outDataSource.CreateLayer(fcBase,geom_type=ogr.wkbPolygon25D, srs=projinfo)
     elif fctype == 'sqlite':
         outDriver = ogr.GetDriverByName('SQLite')
         if not os.path.exists(fcBase + '.sqlite'):
@@ -99,10 +99,11 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
     ringXrightbot,ringYrightbot = rotatePt(delcTot,0,theta)
     ringXrighttop,ringYrighttop = rotatePt(delcTot,delrTot,theta)
     # create grid cells
-    outDataSource.StartTransaction()
     for i,c in enumerate(delc):
         sys.stdout.write('\r{} of {} cols'.format(i+1,len(delc)))
         sys.stdout.flush()
+        outDataSource.StartTransaction()
+
         for j,r in enumerate(delr):
 
             ringXleftbot,ringYleftbot = rotatePt(delc1,delrTot,theta)
@@ -141,6 +142,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             outLayer.CreateFeature(outFeature)
             outFeature = None
 
+        outDataSource.CommitTransaction()
 
         # new envelope for next poly
         delc1 = delcTot
@@ -148,7 +150,6 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
         delrTot = 0.
 
     # Close DataSources   
-    outDataSource.CommitTransaction()
     outDataSource=None
 
 def calcAngle(corners):
