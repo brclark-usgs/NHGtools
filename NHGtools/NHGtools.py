@@ -82,8 +82,8 @@ class nhg(object):
         irow = 1
         theta = 0.
 
-        fn.mkGrid(self.fc, self.__netlExt['ll'], delc, delr,
-                  icol, irow, theta, self.__proj, fctype=fctype)
+        fn.mkGrid(self.fc, self.__natlExt['ll'], delc, delr,
+                  icol, irow, theta, self.__proj, fctype=self.fctype)
 
 
     def fit2national(self):

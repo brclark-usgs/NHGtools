@@ -99,6 +99,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
     ringXrightbot,ringYrightbot = rotatePt(delcTot,0,theta)
     ringXrighttop,ringYrighttop = rotatePt(delcTot,delrTot,theta)
     # create grid cells
+    outDataSource.StartTransaction()
     for i,c in enumerate(delc):
         sys.stdout.write('\r{} of {} cols'.format(i+1,len(delc)))
         sys.stdout.flush()
@@ -140,12 +141,14 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             outLayer.CreateFeature(outFeature)
             outFeature = None
 
+
         # new envelope for next poly
         delc1 = delcTot
         delcTot = delcTot + c
         delrTot = 0.
 
     # Close DataSources   
+    outDataSource.CommitTransaction()
     outDataSource=None
 
 def calcAngle(corners):
