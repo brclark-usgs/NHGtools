@@ -164,8 +164,8 @@ class nhg(object):
         """
         new, empty raster 
         """
-        if fc == None:
-            fc = '{}.{}'.format(self.fc, self.fctype)
+        # if fc == None:
+            # fc = '{}.{}'.format(self.fc, self.fctype)
 
         # steal geotransform from existing grid
         if raster != None:
@@ -193,6 +193,7 @@ class nhg(object):
                                  rsize[1], 1, gdal.GDT_Int32)
         self.__rvds.SetGeoTransform(gt)
         self.__rvds.SetProjection(srs.ExportToWkt())
+        self.__rvds.GetRasterBand(1).SetNoDataValue(0)
 
 
     def rasterizer(self, lyrName='modelgrid', attribute='cellnum',
@@ -210,6 +211,7 @@ class nhg(object):
         gdal.RasterizeLayer(self.__rvds, [1], lyr, None, None, 
                       [1], ['ATTRIBUTE={}'.format(attribute)])
         print('Rasterizification complete')
+        self.__rvds = None
 
 
     def writeBand(self):
