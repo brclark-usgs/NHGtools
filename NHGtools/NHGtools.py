@@ -4,7 +4,7 @@ import numpy as np
 from . import fishnet as fn
 from osgeo import gdal, osr, ogr
 
-class nhg(object):
+class NHGtools(object):
     """
     Parameters
     -----------------------
@@ -20,7 +20,7 @@ class nhg(object):
 
     """
 
-    def __init__(self, ext=None, fac=1, proj=5070, fctype='gpkg',
+    def __init__(self, ext=None, fac=1, fctype='gpkg',
                  fc='natlGrid1km'):
 
         self.NHGextent()
@@ -29,7 +29,7 @@ class nhg(object):
         self.fac = fac
         self.fc = fc
 
-        self.__proj = proj
+        self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs' 
 
         # assign defaults
         self.__cellsize = self.__natCellsize
@@ -73,7 +73,7 @@ class nhg(object):
                   self.__irow, theta, self.__proj, self.fctype,
                   ngcolNum=self.__ngcolNum)
 
-    def mkNationalGrid(self): #fc, fctype='gpkg'):
+    def NationalPoly(self): #fc, fctype='gpkg'):
 
         # nrow, ncol = fn.calcRowCol(ne['ll'], ne['lr'], ne['ur'], cellsize)
         delr = [self.__natCellsize for x in range(self.__ngrows)]
@@ -184,8 +184,8 @@ class nhg(object):
         # proj = lyr.GetSpatialRef() #.ExportToProj4()
         # proj = proj.ExportToProj4()
         srs = osr.SpatialReference()
-        # srs.ImportFromProj4(proj)
-        srs.ImportFromEPSG(self.__proj)
+        srs.ImportFromProj4(self.__proj)
+        # srs.ImportFromEPSG(self.__proj)
 
         drv = gdal.GetDriverByName('GTiff')
 
