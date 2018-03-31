@@ -237,7 +237,7 @@ class NHGtools(object):
 
         cells = np.array(cells)
         cells = cells.reshape((self.__irow, self.__icol))
-        self.__grid = cells
+        self.__grid = np.flipud(cells)
 
 
     def NationalRaster(self):
@@ -245,8 +245,8 @@ class NHGtools(object):
         self.createRaster()
         self.writeBand()
 
-    def localRaster(self):
+    def localRaster(self, rasterName='localRaster.tif'):
         self.fit2national()
-        self.createRaster()
+        self.createRaster(rasterName=rasterName)
         self.makeCellNumRaster()
         self.writeBand()
