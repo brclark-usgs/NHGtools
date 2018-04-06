@@ -88,7 +88,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
 
     featureDefn = outLayer.GetLayerDefn()
 
-    fields = ['natlRow', 'natlCol', 'natlCellNum',
+    fields = ['natlRow', 'natlCol', 'natCellNum',
               'irow', 'icol', 'cellnum']
 
     for field in fields:
@@ -136,7 +136,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             ngcol = icol + i
             outFeature.SetField('natlRow', ngrow)
             outFeature.SetField('natlCol', ngcol)
-            outFeature.SetField('natlCellNum',(ngrow - 1) * ngcols + ngcol)
+            outFeature.SetField('natCellNum',(ngrow -1) * ngcols + ngcol)
 
             outFeature.SetField('irow', j+1)
             outFeature.SetField('icol', i+1)

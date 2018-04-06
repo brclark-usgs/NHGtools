@@ -34,7 +34,6 @@ NHGtools requires:
 
 <!-- To install NHGtools from the git repository type: -->
 
-    <!-- pip install https://github.com/brclark-usgs/NHGtools -->
 
 
 

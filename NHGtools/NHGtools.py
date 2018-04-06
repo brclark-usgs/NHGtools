@@ -83,7 +83,8 @@ class NHGtools(object):
         theta = 0.
 
         fn.mkGrid(self.fc, self.__natlExt['ll'], delc, delr,
-                  icol, irow, theta, self.__proj, fctype=self.fctype)
+                  icol, irow, theta, self.__proj, fctype=self.fctype,
+                  ngcols=self.__ngcols)
 
 
     def fit2national(self):
