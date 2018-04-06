@@ -9,7 +9,7 @@ from math import radians, atan, degrees
 
 
 def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
-           fctype='gpkg',lyr='modelgrid',targsrs=None, ngcolNum=1):
+           fctype='gpkg',lyr='modelgrid',targsrs=None, ngcols=1):
 
     """
     fcBase: string, shapefile path and name or sqlite database name, 
@@ -42,6 +42,10 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
         return(newxy.real, newxy.imag)
 
     projinfo = osr.SpatialReference()
+    x1, y1 = rotatePt(0, len(delr) * delr[0], theta)
+    # upper left
+    x = x1 + x
+    y = y1 + y
 
     if isinstance(proj, str):
         if 'us-ft' in proj:
@@ -92,25 +96,25 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
         outLayer.CreateField(fieldDef)
 
 
-    delrTot = 0. # delr[0]
-    delcTot = delc[0]
+    delrTot = -delr[0]
+    delcTot = delc[0] 
     delc1 = 0.
-    ringXlefttop,ringYlefttop = rotatePt(0,delrTot,theta)
-    ringXrightbot,ringYrightbot = rotatePt(delcTot,0,theta)
-    ringXrighttop,ringYrighttop = rotatePt(delcTot,delrTot,theta)
+    delr1 = 0.
+
     # create grid cells
-    for i,c in enumerate(delc):
-        sys.stdout.write('\r{} of {} cols'.format(i+1,len(delc)))
+    for j,r in enumerate(delr):
+        sys.stdout.write('\r{} of {} rows'.format(j+1,len(delr)))
         sys.stdout.flush()
         outDataSource.StartTransaction()
 
-        for j,r in enumerate(delr):
+        for i,c in enumerate(delc):
 
+            ringXlefttop,ringYlefttop = rotatePt(delc1,delr1,theta)
+            ringXrighttop,ringYrighttop = rotatePt(delcTot,delr1,theta)
             ringXleftbot,ringYleftbot = rotatePt(delc1,delrTot,theta)
             ringXrightbot,ringYrightbot = rotatePt(delcTot,delrTot,theta)
-            delrTot = delrTot + r
-            ringXlefttop,ringYlefttop = rotatePt(delc1,delrTot,theta)
-            ringXrighttop,ringYrighttop = rotatePt(delcTot,delrTot,theta)
+            delc1 = delcTot
+            delcTot = delcTot + c
 
             ring = ogr.Geometry(ogr.wkbLinearRing)
             ring.AddPoint(ringXlefttop + x, ringYlefttop + y)
@@ -128,16 +132,15 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             outFeature = ogr.Feature(featureDefn)
             outFeature.SetGeometry(poly)
 
-            ngrow = irow + len(delr) - (j + 1)
+            ngrow = irow + j
             ngcol = icol + i
             outFeature.SetField('natlRow', ngrow)
             outFeature.SetField('natlCol', ngcol)
-            # outFeature.SetField('natlCellNum',(len(delr)-irow-1)*len(delc)+icol+1)
-            outFeature.SetField('natlCellNum',(ngrow - 1) * ngcolNum + ngcol)
+            outFeature.SetField('natlCellNum',(ngrow - 1) * ngcols + ngcol)
 
-            outFeature.SetField('irow',len(delr) - j)
-            outFeature.SetField('icol', i + 1)
-            outFeature.SetField('cellNum',(len(delr)-j-1)*len(delc)+i+1)
+            outFeature.SetField('irow', j+1)
+            outFeature.SetField('icol', i+1)
+            outFeature.SetField('cellNum', j * len(delc) + i + 1)
 
             outLayer.CreateFeature(outFeature)
             outFeature = None
@@ -145,12 +148,18 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
         outDataSource.CommitTransaction()
 
         # new envelope for next poly
-        delc1 = delcTot
-        delcTot = delcTot + c
-        delrTot = 0.
+        # delc1 = delcTot
+        delc1 = 0
+        delr1 = delrTot
+
+        # delcTot = delcTot + c
+        delrTot = (delrTot - r)
+
+        # delrTot = 0.
+        delcTot = delc[0]
 
     # Close DataSources   
-    outDataSource=None
+    outDataSource = None
 
 def calcAngle(corners):
     '''

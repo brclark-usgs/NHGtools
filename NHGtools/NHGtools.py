@@ -69,9 +69,9 @@ class NHGtools(object):
 
         print('new cols and rows', self.__icol, self.__irow)
         # irow and icol are ....
-        fn.mkGrid(self.fc, self.__newext['ll'], delc, delr, self.__icol,
-                  self.__irow, theta, self.__proj, self.fctype,
-                  ngcolNum=self.__ngcolNum)
+        fn.mkGrid(self.fc, self.__newext['ll'], delc, delr, self.__ngcolNum,
+                  self.__ngrowNum, theta, self.__proj, self.fctype,
+                  ngcols=self.__ngcols)
 
     def NationalPoly(self): #fc, fctype='gpkg'):
 
