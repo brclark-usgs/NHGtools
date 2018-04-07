@@ -12,11 +12,8 @@ class NHGtools(object):
            'lr':lowerright, 'ur': upper right, 'ul': upper left'
            of desired extent
     fc: string, output file name
-    fctype: string, output format, may be 'gpkg' or ...
+    fctype: string, output format, may be 'gpkg' or 'shp'
     fac: float, mult or division factor to resize grid
-
-    __icol: int, columns of desired grid aligned to NHG
-    __irow: int, rows of desired grid aligned to NHG
 
     """
 
@@ -73,9 +70,8 @@ class NHGtools(object):
                   self.__ngrowNum, theta, self.__proj, self.fctype,
                   ngcols=self.__ngcols)
 
-    def NationalPoly(self): #fc, fctype='gpkg'):
+    def NationalPoly(self):
 
-        # nrow, ncol = fn.calcRowCol(ne['ll'], ne['lr'], ne['ur'], cellsize)
         delr = [self.__natCellsize for x in range(self.__ngrows)]
         delc = [self.__natCellsize for x in range(self.__ngcols)]
         icol = 1
@@ -96,7 +92,7 @@ class NHGtools(object):
             res = self.__natCellsize * self.fac
             # if fac != 1:
                 # raise Exception('expecting factor of 1')
-            if fac != 1:
+            if self.fac != 1:
                 print('NOTE: row, column, and cell number \
                        attributes labeled as NHG will not \
                        currently match NHG')
@@ -166,8 +162,6 @@ class NHGtools(object):
         """
         new, empty raster 
         """
-        # if fc == None:
-            # fc = '{}.{}'.format(self.fc, self.fctype)
 
         # steal geotransform from existing grid
         if raster != None:
@@ -183,11 +177,8 @@ class NHGtools(object):
             rsize = (self.__icol, self.__irow)
 
 
-        # proj = lyr.GetSpatialRef() #.ExportToProj4()
-        # proj = proj.ExportToProj4()
         srs = osr.SpatialReference()
         srs.ImportFromProj4(self.__proj)
-        # srs.ImportFromEPSG(self.__proj)
 
         drv = gdal.GetDriverByName('GTiff')
 
