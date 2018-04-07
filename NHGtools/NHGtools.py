@@ -93,12 +93,13 @@ class NHGtools(object):
         print(self.__natlExt)
 
         if isinstance(self.fac, int):
-            # if fac == 1:
             res = self.__natCellsize * self.fac
             # if fac != 1:
                 # raise Exception('expecting factor of 1')
-            # else:
-                # print('this is where grid would get bigger')
+            if fac != 1:
+                print('NOTE: row, column, and cell number \
+                       attributes labeled as NHG will not \
+                       currently match NHG')
 
         elif isinstance(self.fac, str):
             if self.fac == '1/2':
