@@ -202,6 +202,9 @@ class NHGtools(object):
             lyr = ds.GetLayerByName(lyrName)
         else:
             lyr = ds.GetLayer(0)
+            
+        if self.fctype == 'shp':
+            lyr = ds.GetLayer(0)
 
         gdal.RasterizeLayer(self.__rvds, [1], lyr, None, None, 
                       [1], ['ATTRIBUTE={}'.format(attribute)])
