@@ -29,6 +29,11 @@ NHGtools requires at least:
 **GDAL** 2.2
 **NumPy** 1.13
 
+Documentation
+--------------------------------------------
+
+The NHG and associated GIS data is available at [https://doi.org/10.5066/F7P84B24](https://doi.org/10.5066/F7P84B24) 
+
 <!-- **For base Python distributions:** -->
 
 <!-- To install NHGtools from the git repository type: -->
