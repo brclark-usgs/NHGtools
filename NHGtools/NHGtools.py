@@ -26,9 +26,29 @@ class NHGtools(object):
         self.fac = fac
         self.fc = fc
 
-        # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs' 
-        # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +towgs84=1,1,-1,0,0,0,0 +units=m +no_defs' 
-        self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs' 
+        # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+        # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +towgs84=1,1,-1,0,0,0,0 +units=m +no_defs'
+        self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+        self.__projWkt = 'PROJCS["unnamed", \
+                        GEOGCS["WGS 84", \
+                            DATUM["WGS_1984", \
+                                SPHEROID["WGS 84",6378137,298.257223563, \
+                                    AUTHORITY["EPSG","7030"]], \
+                                TOWGS84[0,0,0,0,0,0,0], \
+                                AUTHORITY["EPSG","6326"]], \
+                            PRIMEM["Greenwich",0, \
+                                AUTHORITY["EPSG","8901"]], \
+                            UNIT["degree",0.0174532925199433, \
+                                AUTHORITY["EPSG","9122"]], \
+                            AUTHORITY["EPSG","4326"]], \
+                        PROJECTION["Albers_Conic_Equal_Area"], \
+                        PARAMETER["standard_parallel_1",29.5], \
+                        PARAMETER["standard_parallel_2",45.5], \
+                        PARAMETER["latitude_of_origin",23], \
+                        PARAMETER["central_meridian",-96], \
+                        PARAMETER["false_easting",0], \
+                        PARAMETER["false_northing",0], \
+                        UNIT["Meter",1]]'
 
         # assign defaults
         self.__cellsize = self.__natCellsize
@@ -61,7 +81,7 @@ class NHGtools(object):
         """
 
         self.fit2national()
-   
+
         delr = [self.__cellsize for x in range(self.__irow)]
         delc = [self.__cellsize for x in range(self.__icol)]
         theta = 0.0
@@ -69,7 +89,7 @@ class NHGtools(object):
         print('new cols and rows', self.__icol, self.__irow)
         # irow and icol are ....
         fn.mkGrid(self.fc, self.__newext['ll'], delc, delr, self.__ngcolNum,
-                  self.__ngrowNum, theta, self.__proj, self.fctype,
+                  self.__ngrowNum, theta, self.__projWkt, self.fctype,
                   ngcols=self.__ngcols)
 
     def NationalPoly(self):
@@ -81,12 +101,12 @@ class NHGtools(object):
         theta = 0.
 
         fn.mkGrid(self.fc, self.__natlExt['ll'], delc, delr,
-                  icol, irow, theta, self.__proj, fctype=self.fctype,
+                  icol, irow, theta, self.__projWkt, fctype=self.fctype,
                   ngcols=self.__ngcols)
 
 
     def fit2national(self):
-        
+
         print('national grid')
         print(self.__natlExt)
 
@@ -126,7 +146,7 @@ class NHGtools(object):
         y = self.__natlExt['ll'][1] + int(syoff) * res + res
 
         sxoff = (self.ext['ur'][0] - self.__natlExt['ll'][0]) / res
-        x = self.__natlExt['ll'][0] + (int(sxoff) + 1) * res 
+        x = self.__natlExt['ll'][0] + (int(sxoff) + 1) * res
 
         newext['ur'] = [x, y]
         newext['lr'] = [x, newext['ll'][1]]
@@ -144,8 +164,8 @@ class NHGtools(object):
 
 
         # number of rows and cols of new grid
-        self.__irow, self.__icol = fn.calcRowCol(self.__newext['ll'], self.__newext['lr'], 
-                                   self.__newext['ur'], self.__cellsize) 
+        self.__irow, self.__icol = fn.calcRowCol(self.__newext['ll'], self.__newext['lr'],
+                                   self.__newext['ur'], self.__cellsize)
         print('number of rows, columns, and cellsize of new grid')
         print(self.__irow, self.__icol, self.__cellsize)
 
@@ -162,7 +182,7 @@ class NHGtools(object):
     def createRaster(self, fc=None, rasterName='natlGrid1km.tif',
                      raster=None):
         """
-        new, empty raster 
+        new, empty raster
         """
 
         # steal geotransform from existing grid
@@ -202,11 +222,11 @@ class NHGtools(object):
             lyr = ds.GetLayerByName(lyrName)
         else:
             lyr = ds.GetLayer(0)
-            
+
         if self.fctype == 'shp':
             lyr = ds.GetLayer(0)
 
-        gdal.RasterizeLayer(self.__rvds, [1], lyr, None, None, 
+        gdal.RasterizeLayer(self.__rvds, [1], lyr, None, None,
                       [1], ['ATTRIBUTE={}'.format(attribute)])
         print('Rasterizification complete')
         self.__rvds = None

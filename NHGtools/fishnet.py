@@ -12,8 +12,8 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
            fctype='gpkg',lyr='modelgrid',targsrs=None, ngcols=1):
 
     """
-    fcBase: string, shapefile path and name or sqlite database name, 
-         or name of geopackage, depending on value of fctype 
+    fcBase: string, shapefile path and name or sqlite database name,
+         or name of geopackage, depending on value of fctype
     origin: list,  lower left x and y coordinates of model grid
     delc and delr: lists, cell dimensions of rows and cols
     icol: int, corresponding first column of national grid
@@ -53,8 +53,8 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             projinfo.ImportFromProj4(proj)
             projinfo.SetLinearUnits('us-ft', 0.3048)
         else:
-            projinfo.ImportFromProj4(proj)
-    else:        
+            projinfo.ImportFromWkt(proj)
+    else:
         projinfo.ImportFromEPSG(proj)
 
     if targsrs != None:
@@ -63,12 +63,12 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
             targproj.ImportFromProj4(targsrs)
         else:
             targproj.ImportFromEPSG(targsrs)
-        transform = osr.CoordinateTransformation(projinfo,targproj) 
+        transform = osr.CoordinateTransformation(projinfo,targproj)
     else:
         targproj = projinfo
 
     # create output file
-    if fctype == 'shp': 
+    if fctype == 'shp':
         outDriver = ogr.GetDriverByName('ESRI Shapefile')
         outDriver.DeleteDataSource(fcBase + '.shp')
         outDataSource = outDriver.CreateDataSource(fcBase + '.shp')
@@ -76,7 +76,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
     elif fctype == 'sqlite':
         outDriver = ogr.GetDriverByName('SQLite')
         if not os.path.exists(fcBase + '.sqlite'):
-            outDriver.CreateDataSource(fcBase + '.sqlite', options=['SPATIALITE=yes']) 
+            outDriver.CreateDataSource(fcBase + '.sqlite', options=['SPATIALITE=yes'])
         outDataSource = outDriver.Open(fcBase + '.sqlite', True)
         outLayer = outDataSource.CreateLayer(lyr, geom_type=ogr.wkbPolygon25D, srs=targproj, options=['OVERWRITE=YES'])
     else:
@@ -97,7 +97,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
 
 
     delrTot = -delr[0]
-    delcTot = delc[0] 
+    delcTot = delc[0]
     delc1 = 0.
     delr1 = 0.
 
@@ -158,7 +158,7 @@ def mkGrid(fcBase,origin,delc,delr,icol,irow,theta,proj,
         # delrTot = 0.
         delcTot = delc[0]
 
-    # Close DataSources   
+    # Close DataSources
     outDataSource = None
 
 def calcAngle(corners):
