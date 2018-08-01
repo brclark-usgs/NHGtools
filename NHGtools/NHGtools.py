@@ -29,10 +29,10 @@ class NHGtools(object):
         # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
         # self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +towgs84=1,1,-1,0,0,0,0 +units=m +no_defs'
         self.__proj ='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23.0 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-        self.__projWkt = 'PROJCS["unnamed", \
-                        GEOGCS["WGS 84", \
-                            DATUM["WGS_1984", \
-                                SPHEROID["WGS 84",6378137,298.257223563, \
+        self.__projWkt = 'PROJCS["Albers NHG", \
+                        GEOGCS["GCS_WGS_1984", \
+                            DATUM["D_WGS_1984", \
+                                SPHEROID["WGS_1984",6378137,298.257223563, \
                                     AUTHORITY["EPSG","7030"]], \
                                 TOWGS84[0,0,0,0,0,0,0], \
                                 AUTHORITY["EPSG","6326"]], \
