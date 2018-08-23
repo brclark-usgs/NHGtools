@@ -110,7 +110,7 @@ class NHGtools(object):
         print('national grid')
         print(self.__natlExt)
 
-        if isinstance(self.fac, int):
+        if isinstance(self.fac, float) or isinstance(self.fac, int):
             res = self.__natCellsize * self.fac
             # if fac != 1:
                 # raise Exception('expecting factor of 1')
