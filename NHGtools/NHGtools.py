@@ -126,6 +126,8 @@ class NHGtools(object):
                 res = self.__natCellsize / 4
             elif self.fac == '1/8':
                 res = self.__natCellsize / 8
+            elif self.fac == '1/10':
+                res = self.__natCellsize / 10
             else:
                 res = 0
                 print('this aint gonna work')
